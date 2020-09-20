@@ -1,36 +1,42 @@
 // Basic includes
 const http = require('http');
 const url = require('url');
-const query = require('querystring');
+// const query = require('querystring');
 const pageHandler = require('./htmlResponses.js');
-const ajaxHandler = require('./ajaxResponses.js');
+const jsonHandler = require('./jsonResponses.js');
 
 // Find a valid port
 const port = process.env.PORT || process.env.NODE_PORT || 3000;
 
 const urlStruct = {
-  '/': pageHandler.getIndex,
-  '/style.css': pageHandler.getStyle
+  GET: {
+    '/': pageHandler.getIndex,
+    '/style.css': pageHandler.getStyle,
+    '/getUsers': jsonHandler.getUsers,
+    '/updateUser': jsonHandler.updateUser,
+    notFound: jsonHandler.notFound,
+  },
+  HEAD: {
+    '/getUsers': jsonHandler.getUsersMeta,
+    notFound: jsonHandler.notFoundMeta,
+  },
 };
 
 // Request response code
 const onRequest = (request, response) => {
   // Get parsed request information
   const parsedUrl = url.parse(request.url);
-  const params = query.parse(parsedUrl.query);
-  // Get accepted typesfrom request headers
-  const acceptedTypes = request.headers.accept.split(',');
 
-  // Print out what the url was
-  console.log(request.url);
-  // Print out what the url's information was
-  console.log(parsedUrl);
+  // Print out information for the request
+  console.dir(parsedUrl.pathname);
+  console.dir(request.method);
 
   // Call relevant method
-  if (urlStruct[parsedUrl.pathname]) {
-    urlStruct[parsedUrl.pathname](request, response, acceptedTypes, params);
+  if (urlStruct[request.method][parsedUrl.pathname]) {
+    urlStruct[request.method][parsedUrl.pathname](request, response);
   } else {
-    urlStruct.notfound(request, response, acceptedTypes);
+  // Request URL is not found
+    urlStruct[request.method].notFound(request, response);
   }
 };
 
