@@ -50,14 +50,39 @@ const notFound = (request, response) => {
 const notFoundMeta = (request, response) => respondJSONMeta(request, response, 404);
 
 // Temporary method for creating a user
-const updateUser = (request, response) => {
-  const newUser = {
-    createdAt: Date.now(),
+const addUser = (request, response, body) => {
+  const responseJSON = {
+    message: 'Name and age are both required',
   };
 
-  users[newUser.createdAt] = newUser;
+  if (!body.name || !body.age) {
+    responseJSON.id = 'missingParams';
+    return respondJSON(request, response, 400, responseJSON);
+  }
 
-  return respondJSON(request, response, 201, newUser);
+  // Set response code to say that an object was created
+  let responseCode = 201;
+
+  if (users[body.name]) {
+  // Set response code to say that an object was updated
+    responseCode = 204;
+  } else {
+  // Create empty object if there is no object there currently
+    users[body.name] = {};
+    users[body.name].name = body.name;
+  }
+
+  // Fill object with age
+  users[body.name].age = body.age;
+
+  // Return a message that shows it was successful
+  if (responseCode === 201) {
+    responseJSON.message = 'Created Successfully!';
+    return respondJSON(request, response, responseCode, responseJSON);
+  }
+
+  // Return header but there can't be a message
+  return respondJSONMeta(request, response, responseCode);
 };
 
 module.exports = {
@@ -65,5 +90,5 @@ module.exports = {
   getUsersMeta,
   notFound,
   notFoundMeta,
-  updateUser,
+  addUser,
 };
